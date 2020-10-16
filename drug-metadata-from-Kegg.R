@@ -226,8 +226,10 @@ kEGG_Cancer_drug_set[kEGG_Cancer_drug_set$Generic.name == "Oxfenicine" ,"is_scre
 
 drug_metadata <- right_join(NSC_to_CAS, kEGG_Cancer_drug_set, by = 'CAS')
 
-tmp <- subset(kEGG_Cancer_drug_set, is_screen == 1)
+rm(list = ls()[!ls()%in% "drug_metadata"])
 
-rm(list = ls()[!ls()%in% "kEGG_Cancer_drug_set"])
+#  SAVE drug metadata into a readable format
 
-#  SAVE drug metadata 
+setwd("\\\\d.ethz.ch/groups/biol/sysbc/sauer_1/users/Mauro/Cell_culture_data/190310_LargeScreen/clean_data")
+
+write.csv(x = drug_metadata, file = "drug_metadata.csv")

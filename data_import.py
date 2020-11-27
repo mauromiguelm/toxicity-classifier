@@ -26,8 +26,6 @@ def get_distance_metrics(path_in, path_out):
 
     for idx in range(0,len(data),1):
 
-        #idx = 1
-
         file = dist_files[idx]
 
         metadata = re.compile("\\\\")
@@ -83,8 +81,6 @@ def get_distance_metrics(path_in, path_out):
 
     np.save("dist_combined", store_data)
 
-    #TODO check how def method works in python, how do I call it..
-
 def scale_results(data_file = 'dist_combined.npy',
                   path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
                   path_out):
@@ -101,10 +97,6 @@ def scale_results(data_file = 'dist_combined.npy',
     os.chdir(path_out)
 
     np.save("dist_combined_scaled", scaled_data)
-
-
-
-
 
 if __name__ == '__main__':
 

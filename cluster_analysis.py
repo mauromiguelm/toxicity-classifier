@@ -4,7 +4,7 @@ from tslearn.clustering import TimeSeriesKMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def run_clustering_methods(data_file = 'dist_combined.npy',
+def run_clustering_methods(data_file = 'dist_combined_scaled_denoise.npy',
                            path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
                            path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml',
                            n_clusters = 4):
@@ -23,7 +23,7 @@ def run_clustering_methods(data_file = 'dist_combined.npy',
 
     plt.xlabel("DTW K-means clusters")
 
-    plt.savefig("hist-clusters-drug-eff.png")
+    plt.savefig("hist-clusters-drug-eff_scaled_denoise.png")
 
     plt.show()
 
@@ -36,18 +36,18 @@ def run_clustering_methods(data_file = 'dist_combined.npy',
 
         for i in random.sample(range(0, data_clustered.shape[0]), 10):
             plt.plot(data_clustered[i])
-        plt.savefig('cluster'+str(cluster_id)+'_kmeans.png')
+        plt.savefig('cluster'+str(cluster_id)+'_kmeans_scaled_denoise.png')
         plt.show()
 
     os.chdir(path_data_file)
 
-    np.save('model_cluster_labels', model.labels_)
+    np.save('model_cluster_labels_scaled_denoise', model.labels_)
 
     return model.labels_
 
 def drug_centric_analysis(path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
                           metadata_file = 'metadata-pheno-ml.json',
-                          cluster_labels_file = "model_cluster_labels.npy",
+                          cluster_labels_file = "model_cluster_labels_scaled_denoise.npy",
                           path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml'
                           ):
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
@@ -88,13 +88,13 @@ def drug_centric_analysis(path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\
 
     os.chdir(path_fig)
 
-    plt.savefig("cluster_drug_effect.png")
+    plt.savefig("cluster_drug_effect_scaled_denoise.png")
 
     plt.show()
 
 if __name__ == "__main__":
 
-    run_clustering_methods(data_file = 'dist_combined.npy',
+    run_clustering_methods(data_file = 'dist_combined_scaled_denoise.npy',
                            path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
                            path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml',
                            n_clusters = 4)

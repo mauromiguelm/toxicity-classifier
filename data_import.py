@@ -1,6 +1,7 @@
 
 import os, json, re
 import numpy as np
+import pandas as pd
 from sklearn import preprocessing
 
 def get_distance_metrics(path_in, path_out):
@@ -8,7 +9,7 @@ def get_distance_metrics(path_in, path_out):
 
     dist_files = []
 
-    for path, subdirs, files in os.walk(path_main):
+    for path, subdirs, files in os.walk(path_in):
         for name in files:
             dist_files.append(os.path.join(path, name))
 
@@ -83,12 +84,26 @@ def get_distance_metrics(path_in, path_out):
 
 def scale_results(data_file = 'dist_combined.npy',
                   path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                  path_out):
+                  path_out,
+                  apply_denoise = True):
     "scale distance matrix by row, to avoid biass in clustering"
 
     os.chdir(path_data_file)
 
     data = np.load(data_file)
+
+    if apply_denoise == True:
+
+        data_pd = pd.DataFrame(data.T)
+
+        data_pd = data_pd.rolling(window=5).median().T
+
+        data = data_pd.iloc[:,4:data_pd.shape[1]-1]
+
+        data = np.asarray(data)
+
+    else:
+        pass
 
     scaler = preprocessing.MinMaxScaler().fit(data.T)
 
@@ -96,16 +111,17 @@ def scale_results(data_file = 'dist_combined.npy',
 
     os.chdir(path_out)
 
-    np.save("dist_combined_scaled", scaled_data)
+    np.save("dist_combined_scaled_denoise", scaled_data)
 
 if __name__ == '__main__':
 
-    get_distance_metrics('//d.ethz.ch/groups/biol/sysbc/sauer_1/users/Mauro/from_Andrei/distances/cropped',
-                         '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data')
+    get_distance_metrics(path_in='//d.ethz.ch/groups/biol/sysbc/sauer_1/users/Mauro/from_Andrei/distances/cropped',
+                         path_out='\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data')
 
-    scale_dist_results("dist_combined.npy",
-                       '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                       '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data')
+    scale_results("dist_combined.npy",
+                  '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
+                  '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
+                  apply_denoise= True)
 
 
 

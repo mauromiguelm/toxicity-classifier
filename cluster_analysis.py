@@ -1,17 +1,19 @@
 import os, random, json
 import numpy as np
-from tslearn.clustering import TimeSeriesKMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
+from tslearn.clustering import TimeSeriesKMeans
+from sklearn import metrics
+from sklearn.metrics import pairwise_distances
+from sklearn.metrics import davies_bouldin_score
 
-def run_clustering_methods(data_file = 'dist_combined_scaled_denoise.npy',
-                           path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
+random.seed(10)
+
+def run_clustering_methods(data,
+                           n_clusters,
                            path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml',
-                           n_clusters = 4):
+                           path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data\\cluster_pheno-ml'):
     "run clustering method on temporal distance files, and output cluster labels and a few diagnostic plots"
-    os.chdir(path_data_file)
-
-    data = np.load(data_file)
 
     model = TimeSeriesKMeans(n_clusters= n_clusters, metric="dtw" )
 
@@ -36,31 +38,33 @@ def run_clustering_methods(data_file = 'dist_combined_scaled_denoise.npy',
 
         for i in random.sample(range(0, data_clustered.shape[0]), 10):
             plt.plot(data_clustered[i])
-        plt.savefig('cluster'+str(cluster_id)+'_kmeans_scaled_denoise.png')
+        plt.savefig('nclus'+str(n_clusters)+'clusterID-'+str(cluster_id)+'_kmeans_scaled_denoise.png')
         plt.show()
 
-    os.chdir(path_data_file)
+    os.chdir(path_out)
 
-    np.save('model_cluster_labels_scaled_denoise', model.labels_)
+    np.save('nclus'+str(n_clusters)+'model_cluster_labels_scaled_denoise', model.labels_)
 
-    return model.labels_
+    return(model.labels_)
 
-def drug_centric_analysis(path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                          metadata_file = 'metadata-pheno-ml.json',
-                          cluster_labels_file = "model_cluster_labels_scaled_denoise.npy",
-                          path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml'
+def cluster_eval_metrics(X, labels, metric = 'euclidean'):
+    'run evaluation metrics for different number of clusters'
+
+    ss_metric = metrics.silhouette_score(X, labels, metric)
+
+    ch_metric = metrics.calinski_harabasz_score(X, labels)
+
+    db_metric = davies_bouldin_score(X, labels)
+
+    return([ss_metric, ch_metric, db_metric])
+
+def drug_centric_analysis(metadata,
+                          cluster_labels,
+                          path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml',
                           ):
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 
-    os.chdir(path_data_file)
-
-    cluster_labels = np.load(cluster_labels_file)
-
     n_clusters = max(cluster_labels)
-
-    with open(metadata_file) as output_file:
-        metadata = json.load(output_file)
-
 
     drug_set = set(metadata['drug'])
 
@@ -88,19 +92,62 @@ def drug_centric_analysis(path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\
 
     os.chdir(path_fig)
 
-    plt.savefig("cluster_drug_effect_scaled_denoise.png")
+    plt.savefig('nclus_'+str(n_clusters)+"_drug_effect_scaled_denoise.png")
 
     plt.show()
 
 if __name__ == "__main__":
 
-    run_clustering_methods(data_file = 'dist_combined_scaled_denoise.npy',
-                           path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                           path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml',
-                           n_clusters = 4)
+    path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data'
+    path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml'
+    path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data\\cluster_pheno-ml'
 
-    drug_centric_analysis(path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                          metadata_file = 'metadata-pheno-ml.json',
-                          cluster_labels_file = "model_cluster_labels.npy",
-                          path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml'
-                          )
+    data_file = 'dist_combined_scaled_denoise.npy'
+
+    os.chdir(path_data_file)
+
+    data = np.load(data_file)
+
+    metadata_file = 'metadata-pheno-ml.json'
+
+    summary_eval_metrics = np.empty(shape=(0, 3))
+
+    list_nclus = []
+
+    with open(metadata_file) as output_file:
+        metadata = json.load(output_file)
+
+    for idx in range(2,10):
+        'iterate for different number of clusters'
+
+        list_nclus.append(idx)
+
+        labels = run_clustering_methods(data = data,
+                                        path_fig = path_fig,
+                                        path_out = path_out,
+                                        n_clusters = idx)
+
+        metric = cluster_eval_metrics(X = data,
+                                       labels = labels,
+                                       metric = 'euclidean')
+
+        metric = np.array(metric).reshape(1,3)
+
+
+        summary_eval_metrics = np.append(summary_eval_metrics, metric, axis = 0)
+
+        drug_centric_analysis(metadata = metadata,
+                              cluster_labels = labels,
+                              path_fig = path_fig)
+
+    os.chdir(path_out)
+
+    np.save('eval_metric', summary_eval_metrics)
+
+
+
+
+
+
+
+

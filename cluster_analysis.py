@@ -4,15 +4,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tslearn.clustering import TimeSeriesKMeans
 from sklearn import metrics
-from sklearn.metrics import pairwise_distances
 from sklearn.metrics import davies_bouldin_score
 
 random.seed(10)
 
 def run_clustering_methods(data,
                            n_clusters,
-                           path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml',
-                           path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data\\cluster_pheno-ml'):
+                           path_fig,
+                           path_out):
     "run clustering method on temporal distance files, and output cluster labels and a few diagnostic plots"
 
     model = TimeSeriesKMeans(n_clusters= n_clusters, metric="dtw" )
@@ -60,7 +59,7 @@ def cluster_eval_metrics(X, labels, metric = 'euclidean'):
 
 def drug_centric_analysis(metadata,
                           cluster_labels,
-                          path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml',
+                          path_fig,
                           ):
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 

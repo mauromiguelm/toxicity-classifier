@@ -143,6 +143,40 @@ if __name__ == "__main__":
 
     np.save('eval_metric', summary_eval_metrics)
 
+    os.chdir(path_fig)
+
+    # Create a subplot with 1 rows and 3 columns
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    fig.set_size_inches(21, 7)
+
+    ax1.plot(list_nclus, summary_eval_metrics[:,0])
+
+    ax1.set_title("The silhouette score for the various clusters.")
+    ax1.set_ylabel("Silhouette score")
+    ax1.set_xlabel("Cluster label")
+
+    ax2.plot(list_nclus, summary_eval_metrics[:, 1])
+
+    ax2.set_title("The Calinski-Harabasz score for the various clusters.")
+    ax2.set_ylabel("Calinski-Harabasz score")
+    ax2.set_xlabel("Cluster label")
+
+    ax3.plot(list_nclus, summary_eval_metrics[:, 2])
+
+    ax3.set_title("The Davies-Bouldin score for the various clusters.")
+    ax3.set_ylabel("Davies-Bouldin score")
+    ax3.set_xlabel("Cluster label")
+
+    os.chdir(path_fig)
+
+    plt.savefig('cluster_eval_metrics.png')
+
+    plt.show()
+
+
+
+
+
 
 
 

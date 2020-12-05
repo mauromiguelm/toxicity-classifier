@@ -63,6 +63,10 @@ def drug_centric_analysis(metadata,
                           ):
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 
+    #TODO Focus on n_cluster = 9 and foccus on the cluster#2, since it shows
+    #TODO cytostatic plus cytotoxic.. check if its a concentration dependent
+    #TODO or cell line dependent
+
     n_clusters = max(cluster_labels)
 
     drug_set = set(metadata['drug'])
@@ -94,6 +98,93 @@ def drug_centric_analysis(metadata,
     plt.savefig('nclus_'+str(n_clusters)+"_drug_effect_scaled_denoise.png")
 
     plt.show()
+
+def cell_centric_analysis(metadata,
+                          cluster_labels,
+                          path_fig):
+    drugs = metadata['drug']
+    cells = metadata['cell']
+    concs = metadata['conc']
+
+    for cell in set(cells):
+        "generate cell-centric results for multiple drugs and their concentrations"
+        #cell = 'SKMEL2'
+
+        idx = [x == cell for x in cells]
+        idx = np.array(idx, dtype='bool')
+
+        drug_sub = np.array(drugs)[idx]
+        conc_sub = np.array(concs, dtype='float')[idx]
+        label_sub = np.array(cluster_labels)[idx]
+
+        drug_label = np.empty(shape=(0,5))
+
+        drug_name = []
+
+        for drug in set(drug_sub):
+            if drug != 'PBS':
+                # drug = drug_sub.item(0)
+                idx_drug = [x == drug for x in drug_sub]
+                idx_drug = np.array(idx_drug, dtype='bool')
+
+                conc_drug = conc_sub[idx_drug]
+
+                if len(conc_drug) == 5:
+
+                    label_drug = label_sub[idx_drug]
+                    label_drug = label_drug.reshape(1, 5)
+
+                    drug_label = np.append(drug_label, label_drug, axis=0)
+
+                    drug_name.append(drug)
+
+                else:
+                    pass
+            else:
+                pass
+
+        print('I am working'+cell)
+
+        new_path = path_fig+'\\'+cell
+
+        if os.path.exists(new_path) == False:
+            os.makedirs(new_path)
+        else:
+            pass
+
+        os.chdir(new_path)
+
+        print(new_path)
+
+        heat = sns.heatmap(drug_label,
+                           yticklabels = drug_name
+                           )
+
+
+        plt.savefig("heatmap.png")
+
+        plt.show()
+
+        del new_path
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #TODO plot clusters for each drug, showing cell line specific differences
+    #TODO check differences across concentration, to see if some are toxic and if some are citostatic
+
 
 if __name__ == "__main__":
 
@@ -173,14 +264,9 @@ if __name__ == "__main__":
 
     plt.show()
 
-
-
-
-
-
-
-
-
+    cell_centric_analysis(metadata = metadata,
+                          cluster_labels = labels,
+                          path_fig = path_fig)
 
 
 

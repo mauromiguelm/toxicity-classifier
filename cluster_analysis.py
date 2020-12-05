@@ -264,9 +264,12 @@ if __name__ == "__main__":
 
     plt.show()
 
+    os.chdir(path_data_file+"//cluster_pheno-ml")
+
+    chosen_labels = 'nclus4model_cluster_labels_scaled_denoise.npy'
+
+    chosen_labels = np.load(chosen_labels)
+
     cell_centric_analysis(metadata = metadata,
-                          cluster_labels = labels,
+                          cluster_labels = chosen_labels,
                           path_fig = path_fig)
-
-
-

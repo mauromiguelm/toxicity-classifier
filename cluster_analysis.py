@@ -343,4 +343,6 @@ if __name__ == "__main__":
                           cluster_labels = chosen_labels,
                           path_fig = path_fig)
 
-    conc_centric_analysis
+    conc_centric_analysis(metadata = metadata,
+                          cluster_labels = chosen_labels,
+                          path_fig = path_fig)

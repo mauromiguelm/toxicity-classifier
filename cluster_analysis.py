@@ -160,7 +160,8 @@ def cell_centric_analysis(metadata,
         print(new_path)
 
         heat = sns.heatmap(drug_label,
-                           yticklabels = drug_name
+                           yticklabels = drug_name,
+                           annot=True
                            )
 
         plt.savefig("heatmap.png")
@@ -170,7 +171,6 @@ def cell_centric_analysis(metadata,
         del new_path
 
 
-    #TODO check differences across concentration, to see if some are toxic and if some are citostatic
 def conc_centric_analysis(metadata,
                           cluster_labels,
                           path_fig):

@@ -131,6 +131,10 @@ def cell_centric_analysis(metadata,
 
                 if len(conc_drug) == 5:
 
+                    print(conc_drug)
+
+                    #TODO MAKE SURE conc is ordered!!
+
                     label_drug = label_sub[idx_drug]
                     label_drug = label_drug.reshape(1, 5)
 
@@ -160,6 +164,8 @@ def cell_centric_analysis(metadata,
                            yticklabels = drug_name
                            )
 
+        #TODO add lebels to heatmap
+
 
         plt.savefig("heatmap.png")
 
@@ -168,22 +174,97 @@ def cell_centric_analysis(metadata,
         del new_path
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #TODO plot clusters for each drug, showing cell line specific differences
     #TODO check differences across concentration, to see if some are toxic and if some are citostatic
+def conc_centric_analysis(metadata,
+                          cluster_labels,
+                          path_fig):
+    drugs = metadata['drug']
+    cells = metadata['cell']
+    concs = metadata['conc']
+
+    conc_summary_by_label = np.zeros(shape=(5, len(set(cluster_labels))))
+
+    for drug in set(drugs):
+        "generate concentration-centric results"
+        #drug = drugs[100]
+
+        idx = [x == drug for x in drugs]
+        idx = np.array(idx, dtype='bool')
+
+        conc_sub = np.array(concs, dtype='float')[idx]
+        label_sub = np.array(cluster_labels)[idx]
+
+        drug_label = np.empty(shape=(0,5))
+
+        drug_name = []
+
+        if drug != 'PBS':
+
+            if len(set(conc_sub)) == 5:
+
+                iter_conc = 0
+
+                for conc in sorted(set(conc_sub), reverse=True):
+                    #conc = sorted(set(conc_sub), reverse=True)[3]
+
+
+                    idx_conc = [x == conc for x in conc_sub]
+                    idx_conc = np.array(idx_conc, dtype='bool')
+
+                    label_for_conc = label_sub[idx_conc]
+
+                    label_per_concentration = [0]*len(set(cluster_labels))
+
+                    for label in sorted(set(label_sub), reverse=False):
+                        label_per_concentration[label] = label_per_concentration[label] + sum(label_for_conc == label)
+
+                    conc_summary_by_label[iter_conc,:] = conc_summary_by_label[iter_conc,:] +label_per_concentration
+
+                    iter_conc = iter_conc + 1
+
+
+
+
+
+
+
+
+
+                    label_drug = label_sub[idx_drug]
+                    label_drug = label_drug.reshape(1, 5)
+
+                    drug_label = np.append(drug_label, label_drug, axis=0)
+
+                    drug_name.append(drug)
+
+            else:
+                pass
+        else:
+            pass
+
+        print('I am working'+cell)
+
+        new_path = path_fig+'\\'+cell
+
+        if os.path.exists(new_path) == False:
+            os.makedirs(new_path)
+        else:
+            pass
+
+        os.chdir(new_path)
+
+        print(new_path)
+
+        heat = sns.heatmap(drug_label,
+                           yticklabels = drug_name
+                           )
+
+
+        plt.savefig("heatmap.png")
+
+        plt.show()
+
+        del new_path
 
 
 if __name__ == "__main__":
@@ -273,3 +354,5 @@ if __name__ == "__main__":
     cell_centric_analysis(metadata = metadata,
                           cluster_labels = chosen_labels,
                           path_fig = path_fig)
+
+    conc_centric_analysis

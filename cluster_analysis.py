@@ -123,7 +123,7 @@ def cell_centric_analysis(metadata,
 
         for drug in set(drug_sub):
             if drug != 'PBS':
-                # drug = drug_sub.item(0)
+                #drug = drug_sub.item(0)
                 idx_drug = [x == drug for x in drug_sub]
                 idx_drug = np.array(idx_drug, dtype='bool')
 
@@ -131,11 +131,12 @@ def cell_centric_analysis(metadata,
 
                 if len(conc_drug) == 5:
 
-                    print(conc_drug)
-
-                    #TODO MAKE SURE conc is ordered!!
-
                     label_drug = label_sub[idx_drug]
+
+                    conc_sort = conc_drug.argsort()
+
+                    label_drug = label_drug[conc_sort[::-1]]
+
                     label_drug = label_drug.reshape(1, 5)
 
                     drug_label = np.append(drug_label, label_drug, axis=0)
@@ -146,8 +147,6 @@ def cell_centric_analysis(metadata,
                     pass
             else:
                 pass
-
-        print('I am working'+cell)
 
         new_path = path_fig+'\\'+cell
 
@@ -163,9 +162,6 @@ def cell_centric_analysis(metadata,
         heat = sns.heatmap(drug_label,
                            yticklabels = drug_name
                            )
-
-        #TODO add lebels to heatmap
-
 
         plt.savefig("heatmap.png")
 
@@ -222,21 +218,13 @@ def conc_centric_analysis(metadata,
 
                     iter_conc = iter_conc + 1
 
-
-
-
-
-
-
-
-
                     label_drug = label_sub[idx_drug]
+
                     label_drug = label_drug.reshape(1, 5)
 
                     drug_label = np.append(drug_label, label_drug, axis=0)
 
                     drug_name.append(drug)
-
             else:
                 pass
         else:

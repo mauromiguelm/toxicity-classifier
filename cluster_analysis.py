@@ -64,7 +64,7 @@ def cluster_eval_metrics(X, labels, metric = 'euclidean'):
 
     ch_metric = metrics.calinski_harabasz_score(X, labels)
 
-    db_metric = davies_bouldin_score(X, labels)
+    db_metric = metrics.davies_bouldin_score(X, labels)
 
     return([ss_metric, ch_metric, db_metric])
 

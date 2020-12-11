@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tslearn.clustering import TimeSeriesKMeans
 from sklearn import metrics
-from sklearn.metrics import davies_bouldin_score
 
-random.seed(10)
+seed = 10
+random.seed(seed)
 
 def run_clustering_methods(data,
                            n_clusters,
@@ -28,6 +28,8 @@ def run_clustering_methods(data,
 
     plt.show()
 
+    plt.figure()
+    sz = data.shape[1]
     for cluster_id in range(0,max(model.labels_+1)):
         print(cluster_id)
 
@@ -35,10 +37,19 @@ def run_clustering_methods(data,
 
         data_clustered = data[np.array(idx),]
 
-        for i in random.sample(range(0, data_clustered.shape[0]), 10):
-            plt.plot(data_clustered[i])
-        plt.savefig('nclus'+str(n_clusters)+'clusterID-'+str(cluster_id)+'_kmeans_scaled_denoise.png')
-        plt.show()
+        plt.subplot(3, 3, cluster_id+1)
+        for xx in data_clustered:
+            plt.plot(xx.ravel(), "k-", alpha=.2)
+        plt.plot(model.cluster_centers_[cluster_id].ravel(), "r-")
+        plt.xlim(0, sz)
+        plt.ylim(0, 1.2)
+        plt.text(0.55, 0.85, 'Cluster %d' % (cluster_id),
+                 transform=plt.gca().transAxes)
+
+    plt.tight_layout()
+
+    plt.savefig('nclus'+str(n_clusters)+'clusterID-'+str(cluster_id)+'_kmeans_scaled_denoise_avg.png')
+    plt.show()
 
     os.chdir(path_out)
 
@@ -63,10 +74,8 @@ def drug_centric_analysis(metadata,
                           ):
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 
-    #TODO Focus on n_cluster = 9 and foccus on the cluster#2, since it shows
-    #TODO cytostatic plus cytotoxic.. check if its a concentration dependent
-    #TODO or cell line dependent
-
+    #TODO add pie chart with summary for clusters
+    #TODO pie chart should have max concentration and then first effect
     n_clusters = max(cluster_labels)
 
     drug_set = set(metadata['drug'])
@@ -338,6 +347,9 @@ if __name__ == "__main__":
     chosen_labels = 'nclus4model_cluster_labels_scaled_denoise.npy'
 
     chosen_labels = np.load(chosen_labels)
+
+    #TODO fix labels according to biological effect (cytostatix, cytotoxic, mixed or No effect)
+
 
     cell_centric_analysis(metadata = metadata,
                           cluster_labels = chosen_labels,

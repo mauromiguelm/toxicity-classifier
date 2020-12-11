@@ -14,7 +14,9 @@ def run_clustering_methods(data,
                            path_out):
     "run clustering method on temporal distance files, and output cluster labels and a few diagnostic plots"
 
-    model = TimeSeriesKMeans(n_clusters= n_clusters, metric="dtw" )
+    model = TimeSeriesKMeans(n_clusters= n_clusters,
+                             metric="dtw",
+                             random_state=seed)
 
     model.fit(data)
 

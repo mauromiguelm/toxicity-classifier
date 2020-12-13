@@ -87,10 +87,12 @@ def drug_centric_analysis(metadata,
     clusters_by_drug = np.empty(shape=(0,n_clusters+1))
 
     for drug in drug_set:
+        #drug = drug_set[1]
 
         idx = [x == drug for x in drugs]
+        idx = np.array(idx, dtype='bool')
 
-        drug_labels = cluster_labels[idx]
+        drug_labels = np.array(cluster_labels)[idx]
 
         cluster_freq = []
 
@@ -106,7 +108,7 @@ def drug_centric_analysis(metadata,
 
     os.chdir(path_fig)
 
-    plt.savefig('nclus_'+str(n_clusters)+"_drug_effect_scaled_denoise.png")
+    plt.savefig('nclus_'+str(n_clusters)+"_drug_effect_scaled_denoise_eff.png")
 
     plt.show()
 
@@ -175,7 +177,7 @@ def cell_centric_analysis(metadata,
                            annot=True
                            )
 
-        plt.savefig("heatmap.png")
+        plt.savefig("heatmap-eff.png")
 
         plt.show()
 
@@ -214,7 +216,6 @@ def conc_centric_analysis(metadata,
                 for conc in sorted(set(conc_sub), reverse=True):
                     #conc = sorted(set(conc_sub), reverse=True)[3]
 
-
                     idx_conc = [x == conc for x in conc_sub]
                     idx_conc = np.array(idx_conc, dtype='bool')
 
@@ -229,7 +230,7 @@ def conc_centric_analysis(metadata,
 
                     iter_conc = iter_conc + 1
 
-                    label_drug = label_sub[idx_drug]
+                    label_drug = label_sub[idx_conc]
 
                     label_drug = label_drug.reshape(1, 5)
 
@@ -241,9 +242,7 @@ def conc_centric_analysis(metadata,
         else:
             pass
 
-        print('I am working'+cell)
-
-        new_path = path_fig+'\\'+cell
+        new_path = path_fig+'\\'+ drug
 
         if os.path.exists(new_path) == False:
             os.makedirs(new_path)
@@ -257,7 +256,6 @@ def conc_centric_analysis(metadata,
         heat = sns.heatmap(drug_label,
                            yticklabels = drug_name
                            )
-
 
         plt.savefig("heatmap.png")
 
@@ -289,6 +287,7 @@ if __name__ == "__main__":
 
     for idx in range(2,10):
         'iterate for different number of clusters'
+        #idx = 9
 
         list_nclus.append(idx)
 
@@ -306,8 +305,23 @@ if __name__ == "__main__":
 
         summary_eval_metrics = np.append(summary_eval_metrics, metric, axis = 0)
 
+        #TODO start new py file here
+
+        labels_eff = labels
+
+        noEffect    = [0, 6, 8] #as 0
+        cytotoxic   = [1,5]     #as 1
+        cytostatic  = [2,4]     #as 2
+        mixed       = [3,7]     #as 3
+
+        labels_eff = [0 if x in set(noEffect) else x for x in labels_eff]
+        labels_eff = [1 if x in set(cytotoxic) else x for x in labels_eff]
+        labels_eff = [2 if x in set(cytostatic) else x for x in labels_eff]
+        labels_eff = [3 if x in set(mixed) else x for x in labels_eff]
+
+
         drug_centric_analysis(metadata = metadata,
-                              cluster_labels = labels,
+                              cluster_labels = labels_eff,
                               path_fig = path_fig)
 
     os.chdir(path_out)
@@ -354,7 +368,7 @@ if __name__ == "__main__":
 
 
     cell_centric_analysis(metadata = metadata,
-                          cluster_labels = chosen_labels,
+                          cluster_labels = labels_eff,
                           path_fig = path_fig)
 
     conc_centric_analysis(metadata = metadata,

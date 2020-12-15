@@ -319,18 +319,20 @@ if __name__ == "__main__":
 
         labels_eff = labels
 
-        noEffect    = [0, 2, 5, 6, 7] #as 0
-        cytotoxic   = [1, 4 , 8]     #as 1
-        cytostatic  = [3]     #as 2
+        noEffect            =   [0, 2, 5, 6, 7] #as 0
+        cytostatic          =   [3]             #as 1
+        weak_cytotoxic      =   [4, 8]          #as 2
+        strong_cytotoxic    =   [1]             #as 3
 
         labels_eff = [0 if x in set(noEffect) else x for x in labels_eff]
-        labels_eff = [1 if x in set(cytotoxic) else x for x in labels_eff]
-        labels_eff = [2 if x in set(cytostatic) else x for x in labels_eff]
+        labels_eff = [1 if x in set(cytostatic) else x for x in labels_eff]
+        labels_eff = [2 if x in set(weak_cytotoxic) else x for x in labels_eff]
+        labels_eff = [3 if x in set(strong_cytotoxic) else x for x in labels_eff]
 
         drug_centric_analysis(metadata = metadata,
                               cluster_labels = labels_eff,
                               path_fig = path_fig,
-                              heatmap_label="_drug_effect_cell-drug_scaled_denoise_eff")
+                              heatmap_label="_drug_effect2_cell-drug_scaled_denoise_eff")
 
     os.chdir(path_out)
 
@@ -378,7 +380,7 @@ if __name__ == "__main__":
     cell_centric_analysis(metadata = metadata,
                           cluster_labels = labels_eff,
                           path_fig = path_fig,
-                          heatmap_label="-heatmap_cell-drug_scaled")
+                          heatmap_label="-heatmap_cell-drug_scaled2")
 
     conc_centric_analysis(metadata = metadata,
                           cluster_labels = chosen_labels,

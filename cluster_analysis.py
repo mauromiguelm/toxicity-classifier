@@ -324,10 +324,15 @@ if __name__ == "__main__":
         weak_cytotoxic      =   [4, 8]          #as 2
         strong_cytotoxic    =   [1]             #as 3
 
-        labels_eff = [0 if x in set(noEffect) else x for x in labels_eff]
-        labels_eff = [1 if x in set(cytostatic) else x for x in labels_eff]
-        labels_eff = [2 if x in set(weak_cytotoxic) else x for x in labels_eff]
-        labels_eff = [3 if x in set(strong_cytotoxic) else x for x in labels_eff]
+        labels_eff = ["NoEff" if x in set(noEffect) else x for x in labels_eff]
+        labels_eff = ["Cytostatic" if x in set(cytostatic) else x for x in labels_eff]
+        labels_eff = ["Weak Cytotoxic" if x in set(weak_cytotoxic) else x for x in labels_eff]
+        labels_eff = ["Strong Cytotoxic" if x in set(strong_cytotoxic) else x for x in labels_eff]
+
+        labels_eff = [0 if x == "NoEff" else x for x in labels_eff]
+        labels_eff = [1 if x == "Cytostatic" else x for x in labels_eff]
+        labels_eff = [2 if x == "Weak Cytotoxic" else x for x in labels_eff]
+        labels_eff = [3 if x == "Strong Cytotoxic" else x for x in labels_eff]
 
         drug_centric_analysis(metadata = metadata,
                               cluster_labels = labels_eff,

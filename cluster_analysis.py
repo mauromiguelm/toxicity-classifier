@@ -77,6 +77,7 @@ def cluster_eval_metrics(X, labels, metric = 'euclidean'):
 def drug_centric_analysis(metadata,
                           cluster_labels,
                           path_fig,
+                          heatmap_label
                           ):
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 
@@ -112,13 +113,14 @@ def drug_centric_analysis(metadata,
 
     os.chdir(path_fig)
 
-    plt.savefig('nclus_'+str(n_clusters)+"_drug_effect_scaled_denoise_eff.png")
+    plt.savefig('nclus_'+str(n_clusters)+heatmap_label+".png")
 
     plt.show()
 
 def cell_centric_analysis(metadata,
                           cluster_labels,
-                          path_fig):
+                          path_fig,
+                          heatmap_label):
     drugs = metadata['drug']
     cells = metadata['cell']
     concs = metadata['conc']
@@ -181,7 +183,7 @@ def cell_centric_analysis(metadata,
                            annot=True
                            )
 
-        plt.savefig(cell+"-heatmap-eff.png")
+        plt.savefig(cell+"_"+heatmap_label+".png")
 
         plt.show()
 
@@ -274,7 +276,7 @@ if __name__ == "__main__":
     path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml'
     path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data\\cluster_pheno-ml'
 
-    data_file = 'dist_combined_cell-scaled_denoise.npy'
+    data_file = 'dist_combined_celldrug-scaled_denoise.npy'
 
     os.chdir(path_data_file)
 
@@ -299,9 +301,9 @@ if __name__ == "__main__":
                                         path_fig = path_fig,
                                         path_out = path_out,
                                         n_clusters = idx,
-                                        output_file = "model_cluster_labels_cell-scaled_denoise",
-                                        hist_plot = "clusters-drug-eff_cell-scaled_denoise",
-                                        cluster_plot = '_kmeans_cell-scaled_denoise_avg'
+                                        output_file = "model_cluster_labels_celldrug-scaled_denoise",
+                                        hist_plot = "clusters-drug-eff_celldrug-scaled_denoise",
+                                        cluster_plot = '_kmeans_cell-drugscaled_denoise_avg'
                                         )
 
         metric = cluster_eval_metrics(X = data,
@@ -317,20 +319,18 @@ if __name__ == "__main__":
 
         labels_eff = labels
 
-        noEffect    = [0, 6, 8] #as 0
-        cytotoxic   = [1,5]     #as 1
-        cytostatic  = [2,4]     #as 2
-        mixed       = [3,7]     #as 3
+        noEffect    = [0, 2, 5, 6, 7] #as 0
+        cytotoxic   = [1, 4 , 8]     #as 1
+        cytostatic  = [3]     #as 2
 
         labels_eff = [0 if x in set(noEffect) else x for x in labels_eff]
         labels_eff = [1 if x in set(cytotoxic) else x for x in labels_eff]
         labels_eff = [2 if x in set(cytostatic) else x for x in labels_eff]
-        labels_eff = [3 if x in set(mixed) else x for x in labels_eff]
-
 
         drug_centric_analysis(metadata = metadata,
                               cluster_labels = labels_eff,
-                              path_fig = path_fig)
+                              path_fig = path_fig,
+                              heatmap_label="_drug_effect_cell-drug_scaled_denoise_eff")
 
     os.chdir(path_out)
 
@@ -377,7 +377,8 @@ if __name__ == "__main__":
 
     cell_centric_analysis(metadata = metadata,
                           cluster_labels = labels_eff,
-                          path_fig = path_fig)
+                          path_fig = path_fig,
+                          heatmap_label="-heatmap_cell-drug_scaled")
 
     conc_centric_analysis(metadata = metadata,
                           cluster_labels = chosen_labels,

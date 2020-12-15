@@ -11,7 +11,11 @@ random.seed(seed)
 def run_clustering_methods(data,
                            n_clusters,
                            path_fig,
-                           path_out):
+                           path_out,
+                           output_file,
+                           hist_plot,
+                           cluster_plot,
+                           ):
     "run clustering method on temporal distance files, and output cluster labels and a few diagnostic plots"
 
     model = TimeSeriesKMeans(n_clusters= n_clusters,
@@ -26,7 +30,7 @@ def run_clustering_methods(data,
 
     plt.xlabel("DTW K-means clusters")
 
-    plt.savefig("hist-clusters-drug-eff_scaled_denoise.png")
+    plt.savefig("hist-"+hist_plot+".png")
 
     plt.show()
 
@@ -50,12 +54,12 @@ def run_clustering_methods(data,
 
     plt.tight_layout()
 
-    plt.savefig('nclus'+str(n_clusters)+'clusterID-'+str(cluster_id)+'_kmeans_scaled_denoise_avg.png')
+    plt.savefig('nclus'+str(n_clusters)+'clusterID-'+str(cluster_id)+cluster_plot+'.png')
     plt.show()
 
     os.chdir(path_out)
 
-    np.save('nclus'+str(n_clusters)+'model_cluster_labels_scaled_denoise', model.labels_)
+    np.save('nclus'+str(n_clusters)+output_file, model.labels_)
 
     return(model.labels_)
 
@@ -161,7 +165,7 @@ def cell_centric_analysis(metadata,
             else:
                 pass
 
-        new_path = path_fig+'\\'+cell
+        new_path = path_fig+'\\'+'cell-analysis'
 
         if os.path.exists(new_path) == False:
             os.makedirs(new_path)
@@ -177,7 +181,7 @@ def cell_centric_analysis(metadata,
                            annot=True
                            )
 
-        plt.savefig("heatmap-eff.png")
+        plt.savefig(cell+"-heatmap-eff.png")
 
         plt.show()
 
@@ -270,7 +274,7 @@ if __name__ == "__main__":
     path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml'
     path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data\\cluster_pheno-ml'
 
-    data_file = 'dist_combined_scaled_denoise.npy'
+    data_file = 'dist_combined_cell-scaled_denoise.npy'
 
     os.chdir(path_data_file)
 
@@ -294,7 +298,11 @@ if __name__ == "__main__":
         labels = run_clustering_methods(data = data,
                                         path_fig = path_fig,
                                         path_out = path_out,
-                                        n_clusters = idx)
+                                        n_clusters = idx,
+                                        output_file = "model_cluster_labels_cell-scaled_denoise",
+                                        hist_plot = "clusters-drug-eff_cell-scaled_denoise",
+                                        cluster_plot = '_kmeans_cell-scaled_denoise_avg'
+                                        )
 
         metric = cluster_eval_metrics(X = data,
                                        labels = labels,

@@ -1,4 +1,3 @@
-
 import os, json, re
 import numpy as np
 import pandas as pd
@@ -82,15 +81,17 @@ def get_distance_metrics(path_in, path_out):
 
     np.save("dist_combined", store_data)
 
-def scale_results(data_file = 'dist_combined.npy',
+def scale_results(metadata,
+                  output_file,
+                  data_file = 'dist_combined.npy',
                   path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                  path_out,
+                  path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
                   apply_denoise = True):
     "scale distance matrix by row, to avoid biass in clustering"
 
     os.chdir(path_data_file)
-
     data = np.load(data_file)
+    cells = metadata['cell']
 
     if apply_denoise == True:
 
@@ -105,24 +106,48 @@ def scale_results(data_file = 'dist_combined.npy',
     else:
         pass
 
-    scaler = preprocessing.MinMaxScaler().fit(data.T)
+    for cell in set(cells):
 
-    scaled_data = scaler.transform(data.T).T
+        idx = [x == cell for x in cells]
+
+        idx = np.array(idx, dtype='bool')
+
+        data_cells = data[idx]
+
+        ncol = data_cells.shape[0]
+
+        nrow = data_cells.shape[1]
+
+        data_cells = data_cells.reshape(ncol*nrow,1)
+
+        scaler = preprocessing.MinMaxScaler().fit(data_cells)
+
+        scaled_data = scaler.transform(data_cells)
+
+        scaled_data = scaled_data.reshape(ncol,nrow)
+
+        data[idx] = scaled_data
+
 
     os.chdir(path_out)
 
-    np.save("dist_combined_scaled_denoise", scaled_data)
+    np.save(output_file, data)
 
 if __name__ == '__main__':
+
+    path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data'
+    os.chdir(path_data_file)
+    metadata_file = 'metadata-pheno-ml.json'
+
+    with open(metadata_file) as output_file:
+        metadata = json.load(output_file)
 
     get_distance_metrics(path_in='//d.ethz.ch/groups/biol/sysbc/sauer_1/users/Mauro/from_Andrei/distances/cropped',
                          path_out='\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data')
 
-    scale_results("dist_combined.npy",
-                  '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                  '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
-                  apply_denoise= True)
 
-
-
-
+    scale_results(data_file = 'dist_combined.npy',
+                  output_file = "dist_combined_cell-scaled_denoise",
+                  path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
+                  metadata = metadata,
+                  path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data')

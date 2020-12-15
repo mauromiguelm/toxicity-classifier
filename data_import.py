@@ -83,6 +83,7 @@ def get_distance_metrics(path_in, path_out):
 
 def scale_results(metadata,
                   output_file,
+                  scale,
                   data_file = 'dist_combined.npy',
                   path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
                   path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
@@ -91,7 +92,9 @@ def scale_results(metadata,
 
     os.chdir(path_data_file)
     data = np.load(data_file)
+
     cells = metadata['cell']
+    drugs = metadata['drug']
 
     if apply_denoise == True:
 
@@ -106,32 +109,75 @@ def scale_results(metadata,
     else:
         pass
 
-    for cell in set(cells):
+    if scale == "sample":
 
-        idx = [x == cell for x in cells]
+        scaler = preprocessing.MinMaxScaler().fit(data.T)
 
-        idx = np.array(idx, dtype='bool')
+        scaled_data = scaler.transform(data.T).T
 
-        data_cells = data[idx]
+        os.chdir(path_out)
 
-        ncol = data_cells.shape[0]
+        np.save(output_file, scaled_data)
 
-        nrow = data_cells.shape[1]
+    elif scale == "cell":
 
-        data_cells = data_cells.reshape(ncol*nrow,1)
+        for cell in set(cells):
 
-        scaler = preprocessing.MinMaxScaler().fit(data_cells)
+            idx = [x == cell for x in cells]
 
-        scaled_data = scaler.transform(data_cells)
+            idx = np.array(idx, dtype='bool')
 
-        scaled_data = scaled_data.reshape(ncol,nrow)
+            data_cells = data[idx]
 
-        data[idx] = scaled_data
+            ncol = data_cells.shape[0]
 
+            nrow = data_cells.shape[1]
 
-    os.chdir(path_out)
+            data_cells = data_cells.reshape(ncol * nrow, 1)
 
-    np.save(output_file, data)
+            scaler = preprocessing.MinMaxScaler().fit(data_cells)
+
+            scaled_data = scaler.transform(data_cells)
+
+            scaled_data = scaled_data.reshape(ncol, nrow)
+
+            data[idx] = scaled_data
+
+        os.chdir(path_out)
+
+        np.save(output_file, data)
+
+    elif scale == "cell-drug":
+
+        for cell in set(cells):
+
+            idx_cells = np.array([x == cell for x in cells], dtype='bool')
+
+            for drug in set(drugs):
+
+                idx_drugs = np.array([x == drug for x in drugs],dtype="bool")
+
+                idx_cells_drugs = idx_cells & idx_drugs
+
+                data_cells = data[idx_cells_drugs]
+
+                ncol = data_cells.shape[0]
+
+                nrow = data_cells.shape[1]
+
+                data_cells = data_cells.reshape(ncol * nrow, 1)
+
+                scaler = preprocessing.MinMaxScaler().fit(data_cells)
+
+                scaled_data = scaler.transform(data_cells)
+
+                scaled_data = scaled_data.reshape(ncol, nrow)
+
+                data[idx_cells_drugs] = scaled_data
+
+            os.chdir(path_out)
+
+            np.save(output_file, data)
 
 if __name__ == '__main__':
 
@@ -147,7 +193,8 @@ if __name__ == '__main__':
 
 
     scale_results(data_file = 'dist_combined.npy',
-                  output_file = "dist_combined_cell-scaled_denoise",
+                  output_file = "dist_combined_celldrug-scaled_denoise",
+                  scale="cell-drug",
                   path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data',
                   metadata = metadata,
                   path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data')

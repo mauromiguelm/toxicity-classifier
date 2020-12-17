@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tslearn.clustering import TimeSeriesKMeans
 from sklearn import metrics
+from math import ceil
 
 seed = 10
 random.seed(seed)
@@ -85,27 +86,51 @@ def drug_centric_analysis(metadata,
     #TODO pie chart should have max concentration and then first effect
     n_clusters = max(cluster_labels)
 
-    drug_set = set(metadata['drug'])
+    drug_set = list(set(metadata['drug']))
 
     drugs = metadata['drug']
 
     clusters_by_drug = np.empty(shape=(0,n_clusters+1))
 
-    for drug in drug_set:
-        #drug = drug_set[1]
+    pie_size = 1
 
-        idx = [x == drug for x in drugs]
-        idx = np.array(idx, dtype='bool')
+    ncol = 2
+    nrow = ceil(len(drug_set) / ncol)
 
-        drug_labels = np.array(cluster_labels)[idx]
 
-        cluster_freq = []
+    fig, ax = plt.subplots(nrow, ncol, figsize=(10, 40))
 
-        for cluster in range(0,n_clusters+1):
+    count = 0
 
-            cluster_freq.append(sum(drug_labels == cluster)/len(drug_labels))
+    for i, ax_row in enumerate(ax):
+        for j, axes in enumerate(ax_row):
 
-        cluster_freq = np.array(cluster_freq).reshape(1,n_clusters+1)
+            drug = drug_set[count]
+
+            idx = [x == drug for x in drugs]
+            idx = np.array(idx, dtype='bool')
+
+            drug_labels = np.array(cluster_labels)[idx]
+
+            cluster_freq = []
+
+            for cluster in range(0,n_clusters+1):
+
+                cluster_freq.append(sum(drug_labels == cluster)/len(drug_labels))
+
+            cluster_freq = np.array(cluster_freq).reshape(1,n_clusters+1)
+
+            axes.set_title(str(drug).format(i,j))
+            axes.set_yticklabels([])
+            axes.set_xticklabels([])
+
+            axes.pie(cluster_freq.sum(axis=0), radius=1,
+                      wedgeprops=dict(width=0.3,edgecolor='w'), normalize=True)
+            count += 1
+
+    #fig.subplots_adjust(wspace=.2)
+
+    plt.show()
 
         clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
 
@@ -378,9 +403,6 @@ if __name__ == "__main__":
     chosen_labels = 'nclus4model_cluster_labels_scaled_denoise.npy'
 
     chosen_labels = np.load(chosen_labels)
-
-    #TODO fix labels according to biological effect (cytostatix, cytotoxic, mixed or No effect)
-
 
     cell_centric_analysis(metadata = metadata,
                           cluster_labels = labels_eff,

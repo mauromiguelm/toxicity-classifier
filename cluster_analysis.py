@@ -125,10 +125,13 @@ def drug_centric_analysis(metadata,
             axes.set_xticklabels([])
 
             axes.pie(cluster_freq.sum(axis=0), radius=1,
-                      wedgeprops=dict(width=0.3,edgecolor='w'), normalize=True)
+                      wedgeprops=dict(width=0.3,edgecolor='w'), normalize=True,
+                     colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                             'xkcd:red']
+                     )
             count += 1
 
-    #fig.subplots_adjust(wspace=.2)
+    fig.subplots_adjust(wspace=.2)
 
     plt.show()
 
@@ -214,6 +217,139 @@ def cell_centric_analysis(metadata,
 
         del new_path
 
+
+def drug_conc_centric_analysis(metadata,
+                          cluster_labels,
+                          path_fig):
+
+    "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
+
+    n_clusters = max(cluster_labels)
+
+    drug_set = list(set(metadata['drug']))
+
+    drugs = metadata['drug']
+    concs = metadata['conc']
+
+    clusters_by_drug = np.empty(shape=(0,n_clusters+1))
+
+    pie_size = 1
+
+    ncol = 2
+    nrow = ceil(len(drug_set) / ncol)
+
+
+    fig, ax = plt.subplots(nrow, ncol, figsize=(10, 40))
+
+    count = 0
+
+    for i, ax_row in enumerate(ax):
+        for j, axes in enumerate(ax_row):
+
+            drug = drug_set[count]
+
+
+            idx = [x == drug for x in drugs]
+            idx = np.array(idx, dtype='bool')
+
+            conc_sub = np.array(metadata['conc'])[idx]
+            drug_labels = np.array(cluster_labels)[idx]
+
+            cluster_freq = np.empty(shape=(n_clusters+1, 5))
+
+            if drug != 'PBS':
+                if len(set(conc_sub)) == 5:
+
+                    for cluster in range(0,n_clusters+1):
+
+                        #cluster = 0
+                        idx_cluster = [x == cluster for x in drug_labels]
+                        idx_cluster = np.array(idx_cluster, dtype='bool')
+
+                        conc_labels_sub = conc_sub[idx_cluster]
+                        count_conc = 0
+                        for conc in sorted(set(conc_sub), reverse=False):
+                            #conc = conc_sub[1]
+
+                            cluster_freq[cluster,count_conc] = sum(conc_labels_sub == conc) / sum(idx_cluster)
+
+                            count_conc += 1
+
+                    axes.set_title(str(drug).format(i, j))
+                    axes.set_yticklabels([])
+                    axes.set_xticklabels([])
+
+                    conc_iter = cluster_freq[:, 4].reshape(1, n_clusters + 1)
+
+                    axes.pie(conc_iter.sum(axis=0), radius=1,
+                             wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
+                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                                     'xkcd:red']
+                             )
+
+                    conc_iter = cluster_freq[:, 3].reshape(1, n_clusters + 1)
+
+                    axes.pie(conc_iter.sum(axis=0), radius=0.85,
+                             wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
+                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                                     'xkcd:red']
+                             )
+
+                    conc_iter = cluster_freq[:, 2].reshape(1, n_clusters + 1)
+
+                    axes.pie(conc_iter.sum(axis=0), radius=0.70,
+                             wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
+                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                                     'xkcd:red']
+                             )
+
+                    conc_iter = cluster_freq[:, 1].reshape(1, n_clusters + 1)
+
+                    axes.pie(conc_iter.sum(axis=0), radius=0.55,
+                             wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
+                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                                     'xkcd:red']
+                             )
+
+                    conc_iter = cluster_freq[:, 0].reshape(1, n_clusters + 1)
+
+                    axes.pie(conc_iter.sum(axis=0), radius=0.40,
+                             wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
+                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                                     'xkcd:red']
+                             )
+
+                else:
+                    axes.set_title(str(drug).format(i, j))
+                    axes.set_yticklabels([])
+                    axes.set_xticklabels([])
+
+                    plt.figure()
+
+            else:
+                axes.set_title(str(drug).format(i, j))
+                axes.set_yticklabels([])
+                axes.set_xticklabels([])
+
+                plt.figure()
+
+            count += 1
+
+    fig.subplots_adjust(wspace=.2)
+
+    plt.show()
+
+
+
+        clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
+
+    heat = sns.heatmap(clusters_by_drug, linewidth= 0.5, yticklabels = drug_set, center=0.3)
+
+    os.chdir(path_fig)
+
+    plt.savefig('nclus_'+str(n_clusters)+heatmap_label+".png")
+
+    plt.show()
 
 def conc_centric_analysis(metadata,
                           cluster_labels,

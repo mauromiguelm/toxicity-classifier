@@ -233,6 +233,9 @@ def drug_conc_centric_analysis(metadata,
 
     clusters_by_drug = np.empty(shape=(0,n_clusters+1))
 
+
+    os.chdir(path_fig)
+
     pie_size = 1
 
     ncol = 2
@@ -324,20 +327,21 @@ def drug_conc_centric_analysis(metadata,
                     axes.set_yticklabels([])
                     axes.set_xticklabels([])
 
-                    plt.figure()
+                    plt.plot()
 
             else:
                 axes.set_title(str(drug).format(i, j))
                 axes.set_yticklabels([])
                 axes.set_xticklabels([])
 
-                plt.figure()
+                plt.plot()
 
             count += 1
 
-    fig.subplots_adjust(wspace=.2)
-
+    plt.tight_layout()
+    plt.savefig("drug-conc_pie-plots.png", transparent = True, dpi = 1200)
     plt.show()
+
 
 
 

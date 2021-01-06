@@ -1,8 +1,10 @@
 import os, random, json
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tslearn.clustering import TimeSeriesKMeans
+from scipy.signal import savgol_filter
 from sklearn import metrics
 from math import ceil
 
@@ -33,21 +35,22 @@ def run_clustering_methods(data,
 
     plt.savefig("hist-"+hist_plot+".png")
 
-    plt.show()
+    #plt.show()
+    plt.close("all")
 
     plt.figure()
     sz = data.shape[1]
-    for cluster_id in range(0,max(model.labels_+1)):
-        print(cluster_id)
+    for cluster_id in range(0, max(model.labels_ + 1)):
 
         idx = model.labels_ == cluster_id
 
         data_clustered = data[np.array(idx),]
 
-        plt.subplot(3, 3, cluster_id+1)
+        plt.subplot(3, 3, cluster_id + 1)
         for xx in data_clustered:
             plt.plot(xx.ravel(), "k-", alpha=.2)
-        plt.plot(model.cluster_centers_[cluster_id].ravel(), "r-")
+
+        plt.plot(savgol_filter(model.cluster_centers_[cluster_id].ravel(), 7, 2), "r-", linewidth = 2.5)
         plt.xlim(0, sz)
         plt.ylim(0, 1.2)
         plt.text(0.55, 0.85, 'Cluster %d' % (cluster_id),
@@ -55,12 +58,13 @@ def run_clustering_methods(data,
 
     plt.tight_layout()
 
-    plt.savefig('nclus'+str(n_clusters)+'clusterID-'+str(cluster_id)+cluster_plot+'.png')
-    plt.show()
+    plt.savefig('nclus' + str(n_clusters) + 'clusterID-' + str(cluster_id) + cluster_plot + '.png')
+
+    plt.close("all")
 
     os.chdir(path_out)
 
-    np.save('nclus'+str(n_clusters)+output_file, model.labels_)
+    np.save('labels_nclus_' + str(idx), model.labels_)
 
     return(model.labels_)
 
@@ -74,6 +78,38 @@ def cluster_eval_metrics(X, labels, metric = 'euclidean'):
     db_metric = metrics.davies_bouldin_score(X, labels)
 
     return([ss_metric, ch_metric, db_metric])
+
+def plot_eval_metrics(list_nclus,
+                      summary_eval_metrics,
+                      path_fig):
+    # Create a subplot with 1 rows and 3 columns for visualize cluster evaluation metrics
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    fig.set_size_inches(21, 7)
+
+    ax1.plot(list_nclus, summary_eval_metrics[:, 0])
+
+    ax1.set_title("The silhouette score for the various clusters.")
+    ax1.set_ylabel("Silhouette score")
+    ax1.set_xlabel("Cluster label")
+
+    ax2.plot(list_nclus, summary_eval_metrics[:, 1])
+
+    ax2.set_title("The Calinski-Harabasz score for the various clusters.")
+    ax2.set_ylabel("Calinski-Harabasz score")
+    ax2.set_xlabel("Cluster label")
+
+    ax3.plot(list_nclus, summary_eval_metrics[:, 2])
+
+    ax3.set_title("The Davies-Bouldin score for the various clusters.")
+    ax3.set_ylabel("Davies-Bouldin score")
+    ax3.set_xlabel("Cluster label")
+
+    os.chdir(path_fig)
+
+    plt.savefig('cluster_eval_metrics.png')
+
+    plt.close("all")
 
 def drug_centric_analysis(metadata,
                           cluster_labels,
@@ -133,9 +169,10 @@ def drug_centric_analysis(metadata,
 
     fig.subplots_adjust(wspace=.2)
 
-    plt.show()
+    #plt.show()
+    plt.close("all")
 
-        clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
+    clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
 
     heat = sns.heatmap(clusters_by_drug, linewidth= 0.5, yticklabels = drug_set, center=0.3)
 
@@ -143,7 +180,8 @@ def drug_centric_analysis(metadata,
 
     plt.savefig('nclus_'+str(n_clusters)+heatmap_label+".png")
 
-    plt.show()
+    #plt.show()
+    plt.close("all")
 
 def cell_centric_analysis(metadata,
                           cluster_labels,
@@ -204,7 +242,7 @@ def cell_centric_analysis(metadata,
 
         os.chdir(new_path)
 
-        print(new_path)
+        #print(new_path)
 
         heat = sns.heatmap(drug_label,
                            yticklabels = drug_name,
@@ -213,14 +251,16 @@ def cell_centric_analysis(metadata,
 
         plt.savefig(cell+"_"+heatmap_label+".png")
 
-        plt.show()
+        #plt.show()
+        plt.close("all")
 
         del new_path
 
 
 def drug_conc_centric_analysis(metadata,
-                          cluster_labels,
-                          path_fig):
+                               cluster_labels,
+                               path_fig,
+                               heatmap_label):
 
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 
@@ -340,12 +380,10 @@ def drug_conc_centric_analysis(metadata,
 
     plt.tight_layout()
     plt.savefig("drug-conc_pie-plots.png", transparent = True, dpi = 1200)
-    plt.show()
+    #plt.show()
+    plt.close("all")
 
-
-
-
-        clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
+    clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
 
     heat = sns.heatmap(clusters_by_drug, linewidth= 0.5, yticklabels = drug_set, center=0.3)
 
@@ -353,7 +391,8 @@ def drug_conc_centric_analysis(metadata,
 
     plt.savefig('nclus_'+str(n_clusters)+heatmap_label+".png")
 
-    plt.show()
+    #plt.show()
+    plt.close("all")
 
 def conc_centric_analysis(metadata,
                           cluster_labels,
@@ -422,17 +461,46 @@ def conc_centric_analysis(metadata,
 
         os.chdir(new_path)
 
-        print(new_path)
-
         heat = sns.heatmap(drug_label,
                            yticklabels = drug_name
                            )
 
         plt.savefig("heatmap.png")
 
-        plt.show()
+        #plt.show()
+        plt.close("all")
 
         del new_path
+
+
+def biological_inference_of_clusters(chosen_cluster ,
+                                     path_data_file,
+                                     path_fig
+                                     ):
+        os.chdir(path_data_file)
+
+        labels_eff = np.load(chosen_cluster)
+
+        noEffect            =   [0, 2, 5, 6, 7] #as 0
+        cytostatic          =   [3]             #as 1
+        weak_cytotoxic      =   [4, 8]          #as 2
+        strong_cytotoxic    =   [1]             #as 3
+
+        labels_eff = ["NoEff" if x in set(noEffect) else x for x in labels_eff]
+        labels_eff = ["Cytostatic" if x in set(cytostatic) else x for x in labels_eff]
+        labels_eff = ["Weak Cytotoxic" if x in set(weak_cytotoxic) else x for x in labels_eff]
+        labels_eff = ["Strong Cytotoxic" if x in set(strong_cytotoxic) else x for x in labels_eff]
+
+        labels_eff = [0 if x == "NoEff" else x for x in labels_eff]
+        labels_eff = [1 if x == "Cytostatic" else x for x in labels_eff]
+        labels_eff = [2 if x == "Weak Cytotoxic" else x for x in labels_eff]
+        labels_eff = [3 if x == "Strong Cytotoxic" else x for x in labels_eff]
+
+
+        drug_centric_analysis(metadata = metadata,
+                              cluster_labels = labels_eff,
+                              path_fig = path_fig,
+                              heatmap_label="_drug_effect2_cell-drug_scaled_denoise_eff")
 
 
 if __name__ == "__main__":
@@ -458,7 +526,6 @@ if __name__ == "__main__":
 
     for idx in range(2,10):
         'iterate for different number of clusters'
-        #idx = 9
 
         list_nclus.append(idx)
 
@@ -467,7 +534,7 @@ if __name__ == "__main__":
                                         path_out = path_out,
                                         n_clusters = idx,
                                         output_file = "model_cluster_labels_celldrug-scaled_denoise",
-                                        hist_plot = "clusters-drug-eff_celldrug-scaled_denoise",
+                                        hist_plot = "clusters-celldrug-scaled_denoise",
                                         cluster_plot = '_kmeans_cell-drugscaled_denoise_avg'
                                         )
 
@@ -477,78 +544,35 @@ if __name__ == "__main__":
 
         metric = np.array(metric).reshape(1,3)
 
-
         summary_eval_metrics = np.append(summary_eval_metrics, metric, axis = 0)
 
-        #TODO start new py file here
-
-        labels_eff = labels
-
-        noEffect            =   [0, 2, 5, 6, 7] #as 0
-        cytostatic          =   [3]             #as 1
-        weak_cytotoxic      =   [4, 8]          #as 2
-        strong_cytotoxic    =   [1]             #as 3
-
-        labels_eff = ["NoEff" if x in set(noEffect) else x for x in labels_eff]
-        labels_eff = ["Cytostatic" if x in set(cytostatic) else x for x in labels_eff]
-        labels_eff = ["Weak Cytotoxic" if x in set(weak_cytotoxic) else x for x in labels_eff]
-        labels_eff = ["Strong Cytotoxic" if x in set(strong_cytotoxic) else x for x in labels_eff]
-
-        labels_eff = [0 if x == "NoEff" else x for x in labels_eff]
-        labels_eff = [1 if x == "Cytostatic" else x for x in labels_eff]
-        labels_eff = [2 if x == "Weak Cytotoxic" else x for x in labels_eff]
-        labels_eff = [3 if x == "Strong Cytotoxic" else x for x in labels_eff]
-
         drug_centric_analysis(metadata = metadata,
-                              cluster_labels = labels_eff,
+                              cluster_labels = labels,
                               path_fig = path_fig,
-                              heatmap_label="_drug_effect2_cell-drug_scaled_denoise_eff")
+                              heatmap_label="_drug_effect2_cell-drug_scaled_denoise")
 
-    os.chdir(path_out)
+        cell_centric_analysis(metadata=metadata,
+                              cluster_labels=labels,
+                              path_fig=path_fig,
+                              heatmap_label="-heatmap_cell-drug_scaled2")
+
+        #TODO fix conc_centric_analysis
+
+        # conc_centric_analysis(metadata=metadata,
+        #                       cluster_labels=labels,
+        #                       path_fig=path_fig)
 
     np.save('eval_metric', summary_eval_metrics)
 
     os.chdir(path_fig)
 
-    # Create a subplot with 1 rows and 3 columns
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-    fig.set_size_inches(21, 7)
+    plot_eval_metrics(list_nclus,
+                      summary_eval_metrics,
+                      path_fig)
 
-    ax1.plot(list_nclus, summary_eval_metrics[:,0])
+    biological_inference_of_clusters(chosen_cluster = "labels_nclus_9.npy",
+                                     path_data_file = path_out,
+                                     path_fig
+                                     )
 
-    ax1.set_title("The silhouette score for the various clusters.")
-    ax1.set_ylabel("Silhouette score")
-    ax1.set_xlabel("Cluster label")
 
-    ax2.plot(list_nclus, summary_eval_metrics[:, 1])
-
-    ax2.set_title("The Calinski-Harabasz score for the various clusters.")
-    ax2.set_ylabel("Calinski-Harabasz score")
-    ax2.set_xlabel("Cluster label")
-
-    ax3.plot(list_nclus, summary_eval_metrics[:, 2])
-
-    ax3.set_title("The Davies-Bouldin score for the various clusters.")
-    ax3.set_ylabel("Davies-Bouldin score")
-    ax3.set_xlabel("Cluster label")
-
-    os.chdir(path_fig)
-
-    plt.savefig('cluster_eval_metrics.png')
-
-    plt.show()
-
-    os.chdir(path_data_file+"//cluster_pheno-ml")
-
-    chosen_labels = 'nclus4model_cluster_labels_scaled_denoise.npy'
-
-    chosen_labels = np.load(chosen_labels)
-
-    cell_centric_analysis(metadata = metadata,
-                          cluster_labels = labels_eff,
-                          path_fig = path_fig,
-                          heatmap_label="-heatmap_cell-drug_scaled2")
-
-    conc_centric_analysis(metadata = metadata,
-                          cluster_labels = chosen_labels,
-                          path_fig = path_fig)

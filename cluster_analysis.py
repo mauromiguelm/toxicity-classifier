@@ -148,9 +148,7 @@ def drug_centric_analysis(metadata,
 
     os.chdir(path_fig)
 
-    plt.show()
-
-    plt.savefig('nclus_'+str(n_clusters)+heatmap_label+".png")
+    plt.savefig('nclus_'+str(n_clusters+1)+heatmap_label+".png")
 
     plt.close("all")
 
@@ -452,21 +450,20 @@ def biological_inference_of_clusters(chosen_cluster ,
 
         labels_eff = np.load(chosen_cluster)
 
-        noEffect            =   [0, 2, 5, 6, 7] #as 0
-        cytostatic          =   [3]             #as 1
-        weak_cytotoxic      =   [4, 8]          #as 2
-        strong_cytotoxic    =   [1]             #as 3
+        noEffect            =   [0, 5, 7]   #as 0
+        mixedEffect         =   [2,4,6]     #as 1
+        cytostatic          =   [3]         #as 2
+        cytotoxic    =   [1]         #as 3
 
-        labels_eff = ["NoEff" if x in set(noEffect) else x for x in labels_eff]
-        labels_eff = ["Cytostatic" if x in set(cytostatic) else x for x in labels_eff]
-        labels_eff = ["Weak Cytotoxic" if x in set(weak_cytotoxic) else x for x in labels_eff]
-        labels_eff = ["Strong Cytotoxic" if x in set(strong_cytotoxic) else x for x in labels_eff]
+        labels_eff = ["No Effect" if x in set(noEffect) else x for x in labels_eff]
+        labels_eff = ["Mixed Effect" if x in set(mixedEffect) else x for x in labels_eff]
+        labels_eff = ["Cytotoxic" if x in set(cytostatic) else x for x in labels_eff]
+        labels_eff = ["Cytotoxic" if x in set(cytotoxic) else x for x in labels_eff]
 
-        labels_eff = [0 if x == "NoEff" else x for x in labels_eff]
-        labels_eff = [1 if x == "Cytostatic" else x for x in labels_eff]
-        labels_eff = [2 if x == "Weak Cytotoxic" else x for x in labels_eff]
-        labels_eff = [3 if x == "Strong Cytotoxic" else x for x in labels_eff]
-
+        labels_eff = [0 if x == "No Effect" else x for x in labels_eff]
+        labels_eff = [1 if x == "Mixed Effect" else x for x in labels_eff]
+        labels_eff = [2 if x == "Cytostatic" else x for x in labels_eff]
+        labels_eff = [3 if x == "Cytotoxic" else x for x in labels_eff]
 
         drug_centric_analysis(metadata = metadata,
                               cluster_labels = labels_eff,
@@ -497,6 +494,7 @@ if __name__ == "__main__":
 
     for idx in range(2,10):
         'iterate for different number of clusters'
+        #idx = 8
 
         list_nclus.append(idx)
 
@@ -541,7 +539,7 @@ if __name__ == "__main__":
                       summary_eval_metrics,
                       path_fig)
 
-    biological_inference_of_clusters(chosen_cluster = "labels_nclus_9.npy",
+    biological_inference_of_clusters(chosen_cluster = "labels_nclus_8.npy",
                                      path_data_file = path_out,
                                      path_fig = path_fig
                                      )

@@ -1,6 +1,5 @@
 import os, random, json
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tslearn.clustering import TimeSeriesKMeans
@@ -15,7 +14,6 @@ def run_clustering_methods(data,
                            n_clusters,
                            path_fig,
                            path_out,
-                           output_file,
                            hist_plot,
                            cluster_plot,
                            ):
@@ -58,17 +56,19 @@ def run_clustering_methods(data,
 
     plt.tight_layout()
 
-    plt.savefig('nclus' + str(n_clusters) + 'clusterID-' + str(cluster_id) + cluster_plot + '.png')
+    plt.savefig('nclus' + str(n_clusters) + cluster_plot + '.png')
 
     plt.close("all")
 
     os.chdir(path_out)
 
-    np.save('labels_nclus_' + str(idx), model.labels_)
+    np.save('labels_nclus_' + str(n_clusters), model.labels_)
 
     return(model.labels_)
 
-def cluster_eval_metrics(X, labels, metric = 'euclidean'):
+def cluster_eval_metrics(X,
+                         labels,
+                         metric = 'euclidean'):
     'run evaluation metrics for different number of clusters'
 
     ss_metric = metrics.silhouette_score(X, labels, metric)
@@ -118,69 +118,40 @@ def drug_centric_analysis(metadata,
                           ):
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 
-    #TODO add pie chart with summary for clusters
-    #TODO pie chart should have max concentration and then first effect
     n_clusters = max(cluster_labels)
 
-    drug_set = list(set(metadata['drug']))
+    drug_set = set(metadata['drug'])
 
     drugs = metadata['drug']
 
-    clusters_by_drug = np.empty(shape=(0,n_clusters+1))
+    clusters_by_drug = np.empty(shape=(0, n_clusters + 1))
 
-    pie_size = 1
+    for drug in drug_set:
+        # drug = drug_set[1]
+        idx = [x == drug for x in drugs]
 
-    ncol = 2
-    nrow = ceil(len(drug_set) / ncol)
+        idx = np.array(idx, dtype='bool')
 
+        drug_labels = np.array(cluster_labels)[idx]
 
-    fig, ax = plt.subplots(nrow, ncol, figsize=(10, 40))
+        cluster_freq = []
 
-    count = 0
+        for cluster in range(0, n_clusters + 1):
 
-    for i, ax_row in enumerate(ax):
-        for j, axes in enumerate(ax_row):
+            cluster_freq.append(sum(drug_labels == cluster) / len(drug_labels))
 
-            drug = drug_set[count]
+        cluster_freq = np.array(cluster_freq).reshape(1, n_clusters + 1)
 
-            idx = [x == drug for x in drugs]
-            idx = np.array(idx, dtype='bool')
+        clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis=0)
 
-            drug_labels = np.array(cluster_labels)[idx]
-
-            cluster_freq = []
-
-            for cluster in range(0,n_clusters+1):
-
-                cluster_freq.append(sum(drug_labels == cluster)/len(drug_labels))
-
-            cluster_freq = np.array(cluster_freq).reshape(1,n_clusters+1)
-
-            axes.set_title(str(drug).format(i,j))
-            axes.set_yticklabels([])
-            axes.set_xticklabels([])
-
-            axes.pie(cluster_freq.sum(axis=0), radius=1,
-                      wedgeprops=dict(width=0.3,edgecolor='w'), normalize=True,
-                     colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
-                             'xkcd:red']
-                     )
-            count += 1
-
-    fig.subplots_adjust(wspace=.2)
-
-    #plt.show()
-    plt.close("all")
-
-    clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
-
-    heat = sns.heatmap(clusters_by_drug, linewidth= 0.5, yticklabels = drug_set, center=0.3)
+    heat = sns.heatmap(clusters_by_drug, linewidth=0.5, yticklabels=drug_set, center=0.3)
 
     os.chdir(path_fig)
 
+    plt.show()
+
     plt.savefig('nclus_'+str(n_clusters)+heatmap_label+".png")
 
-    #plt.show()
     plt.close("all")
 
 def cell_centric_analysis(metadata,
@@ -572,7 +543,7 @@ if __name__ == "__main__":
 
     biological_inference_of_clusters(chosen_cluster = "labels_nclus_9.npy",
                                      path_data_file = path_out,
-                                     path_fig
+                                     path_fig = path_fig
                                      )
 
 

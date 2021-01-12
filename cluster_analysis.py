@@ -148,11 +148,17 @@ def drug_centric_analysis(metadata,
 
         clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis=0)
 
-    heat = sns.heatmap(clusters_by_drug, linewidth=0.5, yticklabels=drug_set, center=0.3)
+    heat = sns.heatmap(clusters_by_drug,
+                       linewidth=0.5,
+                       yticklabels=drug_set,
+                       center=0.3,
+                       cmap="YlOrBr")
+
+    plt.tight_layout()
 
     os.chdir(path_fig)
 
-    plt.savefig('nclus_'+str(n_clusters+1)+heatmap_label+".png")
+    plt.savefig('nclus_'+str(n_clusters+1)+heatmap_label+".png", dpi=1200)
 
     plt.close("all")
 
@@ -229,6 +235,67 @@ def cell_centric_analysis(metadata,
 
         del new_path
 
+def max_conc_analysis(metadata,
+                       cluster_labels,
+                       path_fig,
+                       heatmap_label):
+    drugs = metadata['drug']
+    cells = metadata['cell']
+    concs = metadata['conc']
+
+    iter_cells = set(cells)
+    iter_drugs = set(drugs)
+
+    comb_array = np.empty(shape = (len(iter_cells), len(iter_drugs)))
+    comb_array = pd.DataFrame(comb_array, columns=iter_drugs, index=iter_cells)
+
+
+    for cell in iter_cells:
+        "generate cell-centric results for multiple drugs and their concentrations"
+        #cell = 'SKMEL2'
+
+        idx = [x == cell for x in cells]
+        idx = np.array(idx, dtype='bool')
+
+        drug_sub = np.array(drugs)[idx]
+        conc_sub = np.array(concs, dtype='float')[idx]
+        label_sub = np.array(cluster_labels)[idx]
+
+        for drug in iter_drugs:
+            if drug != 'PBS':
+                #drug = "Methotrexate"
+                idx_drug = [x == drug for x in drug_sub]
+                idx_drug = np.array(idx_drug, dtype='bool')
+
+                conc_of_drug = conc_sub[idx_drug]
+                label_of_drug = label_sub[idx_drug]
+
+                max_conc = max(conc_of_drug)
+
+                label_at_max_conc = label_of_drug[conc_of_drug == max_conc]
+
+                comb_array[drug][cell] = label_at_max_conc
+
+    comb_array = comb_array.drop("PBS", axis = 1)
+
+    os.chdir(path_fig)
+
+    my_colors = ['xkcd:grey', 'xkcd:orange', 'xkcd:apple green','xkcd:red']
+
+    drug_names = [x for x in iter_drugs if x != "PBS"]
+
+    heat = sns.clustermap(comb_array,
+                          yticklabels=iter_cells,
+                          xticklabels=drug_names,
+                          cmap = my_colors,
+                          metric = 'correlation'
+                          )
+
+    heat.cax.set_visible(False)
+
+    plt.tight_layout()
+
+    plt.savefig(heatmap_label+".png", transparent = True, dpi = 1200)
 
 def drug_conc_centric_analysis(metadata,
                                cluster_labels,
@@ -299,7 +366,7 @@ def drug_conc_centric_analysis(metadata,
 
                     axes.pie(conc_iter.sum(axis=0), radius=1,
                              wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
-                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                             colors=['xkcd:grey', 'xkcd:orange', 'xkcd:apple green',
                                      'xkcd:red']
                              )
 
@@ -307,7 +374,7 @@ def drug_conc_centric_analysis(metadata,
 
                     axes.pie(conc_iter.sum(axis=0), radius=0.85,
                              wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
-                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                             colors=['xkcd:grey', 'xkcd:orange', 'xkcd:apple green',
                                      'xkcd:red']
                              )
 
@@ -315,7 +382,7 @@ def drug_conc_centric_analysis(metadata,
 
                     axes.pie(conc_iter.sum(axis=0), radius=0.70,
                              wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
-                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                             colors=['xkcd:grey', 'xkcd:orange', 'xkcd:apple green',
                                      'xkcd:red']
                              )
 
@@ -323,7 +390,7 @@ def drug_conc_centric_analysis(metadata,
 
                     axes.pie(conc_iter.sum(axis=0), radius=0.55,
                              wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
-                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                             colors=['xkcd:grey', 'xkcd:orange', 'xkcd:apple green',
                                      'xkcd:red']
                              )
 
@@ -331,34 +398,40 @@ def drug_conc_centric_analysis(metadata,
 
                     axes.pie(conc_iter.sum(axis=0), radius=0.40,
                              wedgeprops=dict(width=0.3, edgecolor='w'), normalize=True,
-                             colors=['xkcd:grey', 'xkcd:apple green', 'xkcd:orange',
+                             colors=['xkcd:grey', 'xkcd:orange', 'xkcd:apple green',
                                      'xkcd:red']
                              )
 
                 else:
-                    axes.set_title(str(drug).format(i, j))
-                    axes.set_yticklabels([])
-                    axes.set_xticklabels([])
-
-                    plt.plot()
+                    pass
+                    # axes.set_title(str(drug).format(i, j))
+                    # axes.set_yticklabels([])
+                    # axes.set_xticklabels([])
+                    #
+                    # plt.()
 
             else:
-                axes.set_title(str(drug).format(i, j))
-                axes.set_yticklabels([])
-                axes.set_xticklabels([])
+                pass
+                # axes.set_title(str(drug).format(i, j))
+                # axes.set_yticklabels([])
+                # axes.set_xticklabels([])
 
-                plt.plot()
+                # plt.plot()
+
 
             count += 1
 
     plt.tight_layout()
+    plt.show()
     plt.savefig("drug-conc_pie-plots.png", transparent = True, dpi = 1200)
-    #plt.show()
     plt.close("all")
 
     clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
 
-    heat = sns.heatmap(clusters_by_drug, linewidth= 0.5, yticklabels = drug_set, center=0.3)
+    heat = sns.heatmap(clusters_by_drug,
+                       linewidth= 0.5,
+                       yticklabels = drug_set,
+                       center=0.3)
 
     os.chdir(path_fig)
 
@@ -453,8 +526,8 @@ def biological_inference_of_clusters(chosen_cluster ,
 
         labels_eff = chosen_cluster
 
-        noEffect            =   [0, 5, 7]   #as 0
-        mixedEffect         =   [2,4,6]     #as 1
+        noEffect            =   [0,4, 5, 7]   #as 0
+        mixedEffect         =   [2,6]     #as 1
         cytostatic          =   [3]         #as 2
         cytotoxic           =   [1]         #as 3
 
@@ -696,5 +769,17 @@ if __name__ == "__main__":
                    output_path='\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml\\images_by_cluster_eff',
                    n_images_per_cluster=3
                    )
+
+    drug_conc_centric_analysis(metadata = metadata,
+                               cluster_labels=labels_eff,
+                               path_fig = path_fig,
+                               heatmap_label= "label_effect_withMixed")
+
+    max_conc_analysis(metadata = metadata,
+                      cluster_labels = labels_eff,
+                      path_fig = path_fig,
+                      heatmap_label= "max_conc_gram")
+
+
 
 

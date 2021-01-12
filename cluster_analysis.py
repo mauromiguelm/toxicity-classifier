@@ -1,10 +1,14 @@
 import os, random, json
 import numpy as np
+import re
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
+from PIL import Image
 from tslearn.clustering import TimeSeriesKMeans
 from scipy.signal import savgol_filter
 from sklearn import metrics
+from random import sample
 from math import ceil
 
 seed = 10
@@ -446,18 +450,17 @@ def biological_inference_of_clusters(chosen_cluster ,
                                      path_data_file,
                                      path_fig
                                      ):
-        os.chdir(path_data_file)
 
-        labels_eff = np.load(chosen_cluster)
+        labels_eff = chosen_cluster
 
         noEffect            =   [0, 5, 7]   #as 0
         mixedEffect         =   [2,4,6]     #as 1
         cytostatic          =   [3]         #as 2
-        cytotoxic    =   [1]         #as 3
+        cytotoxic           =   [1]         #as 3
 
         labels_eff = ["No Effect" if x in set(noEffect) else x for x in labels_eff]
         labels_eff = ["Mixed Effect" if x in set(mixedEffect) else x for x in labels_eff]
-        labels_eff = ["Cytotoxic" if x in set(cytostatic) else x for x in labels_eff]
+        labels_eff = ["Cytostatic" if x in set(cytostatic) else x for x in labels_eff]
         labels_eff = ["Cytotoxic" if x in set(cytotoxic) else x for x in labels_eff]
 
         labels_eff = [0 if x == "No Effect" else x for x in labels_eff]
@@ -469,7 +472,143 @@ def biological_inference_of_clusters(chosen_cluster ,
                               cluster_labels = labels_eff,
                               path_fig = path_fig,
                               heatmap_label="_drug_effect2_cell-drug_scaled_denoise_eff")
+        return(labels_eff)
 
+def get_drug_position(path_data_file):
+    os.chdir(path_data_file)
+
+    MSP1 = pd.read_excel('randomized_layout_1MSP_batch2.xls')
+    MSP1['MSP_plate'] = "P1"
+    MSP2 = pd.read_excel('randomized_layout_2MSP_batch2.xls')
+    MSP2['MSP_plate'] = "P2"
+
+    MSP_full = [MSP1, MSP2]
+
+    MSP_full = pd.concat(MSP_full)
+
+    return(MSP_full)
+
+
+def get_raw_images(metadata,
+                   cluster_labels,
+                   output_path,
+                   n_images_per_cluster
+                   ):
+
+    drug_map = get_drug_position('\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data')
+    drugs = metadata['drug']
+    cells = metadata['cell']
+    concs = metadata['conc']
+
+    cells_image_dir = []
+
+    for n in range(1,8):
+        batch = "batch_{}/".format(str(n))
+        batch_in = "\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users/Mauro/Cell_culture_data/190310_LargeScreen/imageData/" + batch
+
+        cell_in_batch_dir = [x.path for x in os.scandir(batch_in) if x.is_dir()]
+
+        [cells_image_dir.append(x) for x in cell_in_batch_dir]
+
+    for cluster in range(0,max(cluster_labels)+1):
+        #cluster = 2
+        #subset list of clusters from metadata
+
+        output_path_cluster = output_path+"/cluster_{}/".format(str(cluster))
+
+        if not os.path.exists(output_path_cluster):
+            os.makedirs(output_path_cluster)
+        else:
+            pass
+
+        idx = [x == cluster for x in labels]
+        idx = np.array(idx, dtype='bool')
+
+        drug_sub = np.array(drugs)[idx]
+        cell_sub = np.array(cells)[idx]
+        conc_sub = np.array(concs)[idx]
+
+        #take 15 random samples from the clusters
+
+        idx_random = sample(range(0,len(drug_sub)), n_images_per_cluster)
+
+        drug_rand = np.array(drug_sub)[idx_random]
+        cell_rand = np.array(cell_sub)[idx_random]
+        conc_rand = np.array(conc_sub)[idx_random]
+
+        for idx in range(0,len(drug_rand)):
+            #idx = 1
+
+            drug_to_map = drug_rand[idx]
+            cell_to_map = cell_rand[idx]
+            conc_to_map =  conc_rand[idx]
+
+            #convert concentration into well (available in drug map)
+
+            d1 = np.array(drug_map["Drug"] == drug_to_map, dtype='bool')
+            d2 = np.array(drug_map["Final_conc_uM"].round(5) == float(conc_to_map), dtype = 'bool')
+
+            well_to_search = drug_map[d1 & d2 ]
+
+            plate_to_search = well_to_search["MSP_plate"].unique()
+
+            batch_matched = re.compile(".*({}).*".format(cell_to_map))
+
+            if len(plate_to_search) > 1:
+                exit()
+            else:
+                pass
+
+
+            cell_folder = [x for x in cells_image_dir if batch_matched.search(x)]
+
+            if plate_to_search== "P1":
+                match_pattern = ".*({}).*".format("P1")
+                plate_to_match = re.compile(match_pattern)
+                plate_to_match = [x for x in cell_folder if plate_to_match.search(x)]
+            else:
+                pass
+
+            if plate_to_search == "P2":
+                match_pattern = ".*({}).*".format("P2")
+                plate_to_match = re.compile(match_pattern)
+                plate_to_match = [x for x in cell_folder if plate_to_match.search(x)]
+            else:
+                pass
+
+            os.chdir(plate_to_match[0])
+
+            well_position_list = []
+
+            for x in range(0,len(well_to_search)):
+                #x = 0
+
+                col = well_to_search['Column'].to_list()[x]
+                row = well_to_search.iloc[x]['Row']
+                well_position = row + str(col)
+
+                well_position_list.append(well_position)
+
+            well_position_list = ["_{}_".format(x) for x in well_position_list]
+
+            images_to_move = []
+
+            for x in os.listdir():
+
+                if bool(re.search("|".join(well_position_list), x)) == True:
+                    images_to_move.append(x)
+                else:
+                    pass
+
+            for image in images_to_move:
+
+                os.chdir(plate_to_match[0])
+
+                image_file = Image.open(image)
+
+                os.chdir(output_path_cluster)
+
+                image_file.save(image)
 
 if __name__ == "__main__":
 
@@ -538,10 +677,24 @@ if __name__ == "__main__":
     plot_eval_metrics(list_nclus,
                       summary_eval_metrics,
                       path_fig)
+    os.chdir(path_out)
+    labels = np.load("labels_nclus_8.npy")
 
-    biological_inference_of_clusters(chosen_cluster = "labels_nclus_8.npy",
-                                     path_data_file = path_out,
-                                     path_fig = path_fig
-                                     )
+    get_raw_images(metadata=metadata,
+                   cluster_labels=labels,
+                   output_path='\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml\\images_by_cluster',
+                   n_images_per_cluster=3
+                   )
+
+    labels_eff = biological_inference_of_clusters(chosen_cluster = labels,
+                                                  path_data_file = path_out,
+                                                  path_fig = path_fig
+                                                  )
+
+    get_raw_images(metadata = metadata,
+                   cluster_labels = labels_eff,
+                   output_path='\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml\\images_by_cluster_eff',
+                   n_images_per_cluster=3
+                   )
 
 

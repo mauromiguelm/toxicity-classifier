@@ -131,27 +131,31 @@ def drug_centric_analysis(metadata,
     clusters_by_drug = np.empty(shape=(0, n_clusters + 1))
 
     for drug in drug_set:
-        # drug = drug_set[1]
-        idx = [x == drug for x in drugs]
+        if drug != "PBS":
+            # drug = drug_set[1]
+            idx = [x == drug for x in drugs]
 
-        idx = np.array(idx, dtype='bool')
+            idx = np.array(idx, dtype='bool')
 
-        drug_labels = np.array(cluster_labels)[idx]
+            drug_labels = np.array(cluster_labels)[idx]
 
-        cluster_freq = []
+            cluster_freq = []
 
-        for cluster in range(0, n_clusters + 1):
+            for cluster in range(0, n_clusters + 1):
 
-            cluster_freq.append(sum(drug_labels == cluster) / len(drug_labels))
+                cluster_freq.append(sum(drug_labels == cluster) / len(drug_labels))
 
-        cluster_freq = np.array(cluster_freq).reshape(1, n_clusters + 1)
+            cluster_freq = np.array(cluster_freq).reshape(1, n_clusters + 1)
 
-        clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis=0)
+            clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis=0)
+        else:
+            pass
 
-    heat = sns.heatmap(clusters_by_drug,
+    drug_names = [x for x in drug_set if x != "PBS"]
+
+    heat = sns.heatmap(data = clusters_by_drug,
                        linewidth=0.5,
-                       yticklabels=drug_set,
-                       center=0.3,
+                       yticklabels=drug_names,
                        cmap="YlOrBr")
 
     plt.tight_layout()

@@ -35,7 +35,7 @@ def run_clustering_methods(data,
 
     plt.xlabel("DTW K-means clusters")
 
-    plt.savefig("hist-"+hist_plot+".png")
+    plt.savefig("hist-"+hist_plot+'cluster_n-'+str(n_clusters)+".svg")
 
     #plt.show()
     plt.close("all")
@@ -60,7 +60,7 @@ def run_clustering_methods(data,
 
     plt.tight_layout()
 
-    plt.savefig('nclus' + str(n_clusters) + cluster_plot + '.png')
+    plt.savefig('nclus' + str(n_clusters) + cluster_plot + '.svg')
 
     plt.close("all")
 
@@ -111,7 +111,7 @@ def plot_eval_metrics(list_nclus,
 
     os.chdir(path_fig)
 
-    plt.savefig('cluster_eval_metrics.png')
+    plt.savefig('cluster_eval_metrics.svg')
 
     plt.close("all")
 
@@ -162,7 +162,7 @@ def drug_centric_analysis(metadata,
 
     os.chdir(path_fig)
 
-    plt.savefig('nclus_'+str(n_clusters+1)+heatmap_label+".png", dpi=1200)
+    plt.savefig('nclus_'+str(n_clusters+1)+heatmap_label+".svg", dpi=1200)
 
     plt.close("all")
 
@@ -232,7 +232,7 @@ def cell_centric_analysis(metadata,
                            annot=True
                            )
 
-        plt.savefig(cell+"_"+heatmap_label+".png")
+        plt.savefig(cell+"_"+heatmap_label+".svg")
 
         #plt.show()
         plt.close("all")
@@ -299,12 +299,11 @@ def max_conc_analysis(metadata,
 
     plt.tight_layout()
 
-    plt.savefig(heatmap_label+".png", transparent = True, dpi = 1200)
+    plt.savefig(heatmap_label+".svg", transparent = True, dpi = 1200)
 
 def drug_conc_centric_analysis(metadata,
                                cluster_labels,
-                               path_fig,
-                               heatmap_label):
+                               path_fig):
 
     "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
 
@@ -412,7 +411,7 @@ def drug_conc_centric_analysis(metadata,
                     # axes.set_yticklabels([])
                     # axes.set_xticklabels([])
                     #
-                    # plt.()
+                    # plt.plot()
 
             else:
                 pass
@@ -426,22 +425,7 @@ def drug_conc_centric_analysis(metadata,
             count += 1
 
     plt.tight_layout()
-    plt.show()
-    plt.savefig("drug-conc_pie-plots.png", transparent = True, dpi = 1200)
-    plt.close("all")
-
-    clusters_by_drug = np.append(clusters_by_drug, cluster_freq, axis = 0)
-
-    heat = sns.heatmap(clusters_by_drug,
-                       linewidth= 0.5,
-                       yticklabels = drug_set,
-                       center=0.3)
-
-    os.chdir(path_fig)
-
-    plt.savefig('nclus_'+str(n_clusters)+heatmap_label+".png")
-
-    #plt.show()
+    plt.savefig("drug-conc_pie-plots.svg", transparent = True, dpi = 1200)
     plt.close("all")
 
 def conc_centric_analysis(metadata,
@@ -515,7 +499,7 @@ def conc_centric_analysis(metadata,
                            yticklabels = drug_name
                            )
 
-        plt.savefig("heatmap.png")
+        plt.savefig("heatmap.svg")
 
         #plt.show()
         plt.close("all")
@@ -524,7 +508,6 @@ def conc_centric_analysis(metadata,
 
 
 def biological_inference_of_clusters(chosen_cluster ,
-                                     path_data_file,
                                      path_fig
                                      ):
 
@@ -718,7 +701,6 @@ if __name__ == "__main__":
                                         path_fig = path_fig,
                                         path_out = path_out,
                                         n_clusters = idx,
-                                        output_file = "model_cluster_labels_celldrug-scaled_denoise",
                                         hist_plot = "clusters-celldrug-scaled_denoise",
                                         cluster_plot = '_kmeans_cell-drugscaled_denoise_avg'
                                         )

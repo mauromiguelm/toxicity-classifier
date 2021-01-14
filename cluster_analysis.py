@@ -31,13 +31,16 @@ def run_clustering_methods(data,
 
     os.chdir(path_fig)
 
-    plt.hist(x=list(model.labels_))
+    ax = sns.histplot(data= model.labels_,
+                      kde=True,
+                      discrete = True
+                      )
 
-    plt.xlabel("DTW K-means clusters")
+    ax.set(xlabel='DTW K-means clusters={}'.format(str(idx)))
 
-    plt.savefig("hist-"+hist_plot+'cluster_n-'+str(n_clusters)+".svg")
+    plt.savefig("hist-" + hist_plot + 'cluster_n-' + str(n_clusters) + ".svg",
+                transparent = True, dpi = 1200)
 
-    #plt.show()
     plt.close("all")
 
     plt.figure()
@@ -67,6 +70,8 @@ def run_clustering_methods(data,
     os.chdir(path_out)
 
     np.save('labels_nclus_' + str(n_clusters), model.labels_)
+
+
 
     return(model.labels_)
 
@@ -165,6 +170,55 @@ def drug_centric_analysis(metadata,
     plt.savefig('nclus_'+str(n_clusters+1)+heatmap_label+".svg", dpi=1200)
 
     plt.close("all")
+
+def cell_freq_by_cluster(metadata,
+                         cluster_labels,
+                         path_fig,
+                         heatmap_label
+                         ):
+    "run drug-centric analysis, to observe possible differences in drug effect from clustering analysis"
+
+    n_clusters = max(cluster_labels)
+
+    cell_set = set(metadata['cell'])
+
+    cells = metadata['cell']
+
+    clusters_by_cell = np.empty(shape=(0, n_clusters + 1))
+
+    for cell in cell_set:
+
+        idx = [x == cell for x in cells]
+
+        idx = np.array(idx, dtype='bool')
+
+        cell_labels = np.array(cluster_labels)[idx]
+
+        cluster_freq = []
+
+        for cluster in range(0, n_clusters + 1):
+
+            cluster_freq.append(sum(cell_labels == cluster) / len(cell_labels))
+
+        cluster_freq = np.array(cluster_freq).reshape(1, n_clusters + 1)
+
+        clusters_by_cell = np.append(clusters_by_cell, cluster_freq, axis=0)
+
+    cell_names = [x for x in cell_set]
+
+    heat = sns.heatmap(data = clusters_by_cell,
+                       linewidth=0.5,
+                       yticklabels=cell_names,
+                       cmap="YlOrBr")
+
+    plt.tight_layout()
+
+    os.chdir(path_fig)
+
+    plt.savefig('nclus_'+str(n_clusters+1)+heatmap_label+".svg", dpi=1200)
+
+    plt.close("all")
+
 
 def cell_centric_analysis(metadata,
                           cluster_labels,
@@ -717,6 +771,12 @@ if __name__ == "__main__":
                               cluster_labels = labels,
                               path_fig = path_fig,
                               heatmap_label="_drug_effect2_cell-drug_scaled_denoise")
+
+        cell_freq_by_cluster(metadata = metadata,
+                             cluster_labels = labels,
+                             path_fig = path_fig,
+                             heatmap_label = "freq-by-cell"
+                             )
 
         cell_centric_analysis(metadata=metadata,
                               cluster_labels=labels,

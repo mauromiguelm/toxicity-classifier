@@ -36,7 +36,7 @@ def run_clustering_methods(data,
                       discrete = True
                       )
 
-    ax.set(xlabel='DTW K-means clusters={}'.format(str(idx)))
+    ax.set(xlabel='DTW K-means clusters={}'.format(str(n_clusters)))
 
     plt.savefig("hist-" + hist_plot + 'cluster_n-' + str(n_clusters) + ".svg",
                 transparent = True, dpi = 1200)
@@ -567,8 +567,8 @@ def biological_inference_of_clusters(chosen_cluster ,
 
         labels_eff = chosen_cluster
 
-        noEffect            =   [0,4, 5, 7]   #as 0
-        mixedEffect         =   [2,6]     #as 1
+        noEffect            =   [0,4, 5, 7] #as 0
+        mixedEffect         =   [2,6]       #as 1
         cytostatic          =   [3]         #as 2
         cytotoxic           =   [1]         #as 3
 
@@ -797,6 +797,7 @@ if __name__ == "__main__":
                       summary_eval_metrics,
                       path_fig)
     os.chdir(path_out)
+
     labels = np.load("labels_nclus_8.npy")
 
     get_raw_images(metadata=metadata,
@@ -806,9 +807,11 @@ if __name__ == "__main__":
                    )
 
     labels_eff = biological_inference_of_clusters(chosen_cluster = labels,
-                                                  path_data_file = path_out,
-                                                  path_fig = path_fig
-                                                  )
+                                                  path_fig = path_fig)
+
+    os.chdir(path_out)
+
+    np.save('labels_nclus_bio-effect', labels_eff)
 
     get_raw_images(metadata = metadata,
                    cluster_labels = labels_eff,
@@ -816,10 +819,14 @@ if __name__ == "__main__":
                    n_images_per_cluster=3
                    )
 
+    drug_centric_analysis(metadata=metadata,
+                          cluster_labels=labels_eff,
+                          path_fig=path_fig,
+                          heatmap_label="_drug_biological_labels")
+
     drug_conc_centric_analysis(metadata = metadata,
                                cluster_labels=labels_eff,
-                               path_fig = path_fig,
-                               heatmap_label= "label_effect_withMixed")
+                               path_fig = path_fig)
 
     max_conc_analysis(metadata = metadata,
                       cluster_labels = labels_eff,

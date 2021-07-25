@@ -91,3 +91,45 @@ for drug in set(drugs):
 
 
 
+### prediction of toxicity ###
+
+path_data_file = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data'
+path_fig = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\Mauro\\Cell_culture_data\\190310_LargeScreen\\figures\\pheno-ml'
+path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_culture_data\\190310_LargeScreen\\clean_data\\cluster_pheno-ml'
+
+os.chdir(path_out)
+
+labels = np.load('labels_nclus_bio-effect.npy')
+
+os.chdir(path_data_file)
+
+metadata_file = 'metadata-pheno-ml.json'
+
+with open(metadata_file) as output_file:
+    metadata = json.load(output_file)
+
+drugs = np.array(metadata['drug'])
+cells = np.array(metadata['cell'])
+concs = np.array(metadata['conc'])
+
+data_labels = {'labels' : labels,'drugs': drugs, 'cells':cells, "concs": concs}
+
+data_labels = pd.DataFrame(data_labels)
+
+# from cluster 8 take all reversible growth effects, and all irreversible effects
+# (from cytotoxic drugs) and build an predictor to differentiate between
+# control, cytostatic and cytotoxic.
+
+#select representative drugs
+
+'Methotrexate' is antimetabolite (DHFR inhibitor)
+'Docetaxel' is a microtubule inhibitor
+'Cladribine' is a purine analog that leads to DSB
+'Oxaliplatin' is a DNA crosslinking-promoting drug
+
+drugs_cytotoxic = ('Methotrexate', 'Docetaxel','Cladribine','Oxaliplatin')
+
+
+# predict results from method created before, across all dataset
+
+# plot figures

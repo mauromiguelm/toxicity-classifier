@@ -100,7 +100,7 @@ path_out = '\\\\d.ethz.ch\\groups\\biol\\sysbc\\sauer_1\\users\\Mauro\\Cell_cult
 os.chdir(path_out)
 
 labels = np.load('labels_nclus_bio-effect.npy')
-
+remote
 os.chdir(path_data_file)
 
 metadata_file = 'metadata-pheno-ml.json'
